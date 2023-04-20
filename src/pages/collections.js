@@ -1,4 +1,4 @@
-import { Box, Breadcrumbs, Button, ButtonBase, Collapse, Divider, InputBase, Link, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Select, TextField, Typography } from '@mui/material'
+import { Box, Breadcrumbs, Button, ButtonBase, Collapse, Divider, InputBase, Link, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, Select, TextField, Typography } from '@mui/material'
 import Head from 'next/head'
 import { useState } from 'react';
 import { BsPlus, BsSearch, BsThreeDotsVertical, BsFolder, BsChevronUp, BsChevronDown, BsThreeDots } from 'react-icons/bs';
@@ -71,6 +71,7 @@ const CollectionItem = ({ item, level = 0 }) => {
   const [open, setOpen] = useState(false);
   const hasCollections = Boolean(item.collections ?? false);
   const [hovered, setHovered] = useState(false);
+  const [optionAnchor, setOptionAnchor] = useState(null);
 
   const width = (level - 1) * 15;
   const mr = 1;
@@ -78,41 +79,84 @@ const CollectionItem = ({ item, level = 0 }) => {
 
   const onClickOption = (e) => {
     e.stopPropagation();
+    setOptionAnchor(e.currentTarget);
   }
   return (
-    <ListItem disablePadding disableGutters sx={{ display: "block", position: "relative" }} onMouseOver={e => setHovered(true)} onMouseLeave={e => setHovered(false)}>
-      {
-        hasCollections ? (
-          <>
-            <ListItemButton sx={{ py: 0, height: 24 }} >
-              <Box width={width + "px"} mr={mr} height="24px" sx={{ borderRight: borderRight, }} />
-              <Typography fontSize={11} color="primary" sx={{ width: 20, color: "black" }} onClick={e => setOpen(!open)} >{open ? <BsChevronDown /> : <BsChevronUp />}</Typography>
-              <Typography fontSize={14} color="primary"><BsFolder/></Typography>
-              <Typography fontSize={12} sx={{ ml: 1, flexGrow: 1 }}>{item.name}</Typography>
+    <>
+      <ListItem disablePadding disableGutters sx={{ display: "block", position: "relative" }} onMouseOver={e => setHovered(true)} onMouseLeave={e => setHovered(false)}>
+
+        <ListItemButton sx={{ py: 0, height: 24, }}>
+          <Box width={width + "px"} mr={mr} height="24px" sx={{ borderRight: borderRight, }} />
+          <Typography fontSize={11} sx={{ width: 20, color: "black" }} onClick={e => setOpen(!open)} >
+            {open ? <BsChevronDown /> : <BsChevronUp />}
+          </Typography>
+          <Typography fontSize={10} sx={{ color: hasCollections ? "#000" : colors[item.request.method] }}>
+            {hasCollections ? <BsFolder /> : item.request.method.toUpperCase()}
+          </Typography>
+          <Typography fontSize={12} sx={{ ml: 1, flexGrow: 1 }}>{item.name}</Typography>
+        </ListItemButton>
+
+
+        <ButtonBase sx={{ position: "absolute", top: "2px", right: 0, p: 0.5, zIndex: 2, display: hovered ? undefined : "none", borderRadius: 0.5, }} onClick={onClickOption}>
+          <BsThreeDots fontSize={11} />
+        </ButtonBase>
+        <Popover
+          anchorEl={optionAnchor}
+          open={Boolean(optionAnchor)}
+          onClose={e => setOptionAnchor(null)}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "left"
+          }}>
+
+          <List dense>
+            {
+              hasCollections ? (
+                <>
+                  <ListItemButton>
+                    <ListItemText>Edit</ListItemText>
+                  </ListItemButton>
+                  <ListItemButton>
+                    <ListItemText>Add request</ListItemText>
+                  </ListItemButton>
+                  <ListItemButton>
+                    <ListItemText>Add folder</ListItemText>
+                  </ListItemButton>
+                </>
+              ) : (
+                <>
+                  <ListItemButton>
+                    <ListItemText>Open in tab</ListItemText>
+                  </ListItemButton>
+                </>
+              )
+            }
+            <ListItemButton>
+              <ListItemText>Rename</ListItemText>
             </ListItemButton>
-            <Collapse in={open}>
-              <List dense sx={{ py: 0 }}>
-                {
-                  item.collections.map(subItem => <CollectionItem key={subItem.name} item={subItem} level={level + 1} />)
-                }
-              </List>
-            </Collapse>
-          </>
-        ) : (
-          <ListItemButton sx={{ py: 0, height: 24, }}>
-            <Box width={width + "px"} mr={mr} height="24px" sx={{ borderRight: borderRight, }} />
-            <Typography fontSize={11} sx={{ width: 20, color: "black" }} onClick={e => setOpen(!open)} >
-              {open ? <BsChevronDown /> : <BsChevronUp />}
-            </Typography>
-            <Typography fontSize={10} sx={{ color: colors[item.request.method] }}>{item.request.method.toUpperCase()}</Typography>
-            <Typography fontSize={12} sx={{ ml: 1, flexGrow: 1 }}>{item.name}</Typography>
-          </ListItemButton>
+            <ListItemButton>
+              <ListItemText>Duplicate</ListItemText>
+            </ListItemButton>
+            <ListItemButton>
+              <ListItemText>Delete</ListItemText>
+            </ListItemButton>
+          </List >
+
+        </Popover >
+      </ListItem >
+      {
+        hasCollections && (
+          <Collapse in={open} unmountOnExit>
+            <List dense sx={{ py: 0 }}>
+              {
+                item.collections.map(subItem => <CollectionItem key={subItem.name} item={subItem} level={level + 1} />)
+              }
+            </List>
+          </Collapse>
         )
       }
-      <ButtonBase sx={{ position: "absolute", top: "2px", right: 0, p: 0.5, zIndex: 2, display: hovered ? undefined : "none", borderRadius: 0.5, }} onClick={onClickOption}>
-        <BsThreeDots fontSize={11} />
-      </ButtonBase>
-    </ListItem>
+
+    </>
   )
 
 }
